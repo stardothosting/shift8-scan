@@ -15,16 +15,38 @@ import {Platform, StyleSheet, Text, View} from 'react-native';
 import { NetworkInfo } from 'react-native-network-info';
 var sip = require ('shift8-ip-func');
 var net = require('react-native-tcp');
+import SubnetmaskModule from 'get-subnet-mask';
 var async = require("async");
 
 //var local_ip = NetworkInfo.getIPAddress(ip => () => return(ip));
 //alert(local_ip);
 
 var local_ip = null;
-var local_subnet = null;
+var local_broadcast = null;
 var local_netmask = null;
 
-NetworkInfo.getIPAddress(ip => { returnValue('local_ip', ip); });
+// Must load all variables in sequence asynchronously
+async.series([
+  function(callback) {
+    NetworkInfo.getIPAddress(ip => { local_ip = ip; callback(); });
+  },
+  function(callback) {
+    NetworkInfo.getBroadcast(address => {local_broadcast = address; callback(); });
+  },
+  function(callback) {
+    SubnetmaskModule.getSubnet((sb) => { local_netmask = sb; callback(); });
+  },
+  /************************************************
+  * Main function now that everything is assigned *
+  ************************************************/
+  function(callback) {
+      console.log('Local ip : ' + local_ip);
+      console.log('Local broadcast : ' + local_broadcast);
+      console.log('Local netmask : ' + local_netmask);
+  }
+  ]);
+
+
 
 function returnValue(method, value) {
   switch (method) {
