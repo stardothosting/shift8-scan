@@ -12,10 +12,38 @@ import {Platform, StyleSheet, Text, View} from 'react-native';
 
 
 // Custom requires
+import { NetworkInfo } from 'react-native-network-info';
 var sip = require ('shift8-ip-func');
 var net = require('react-native-tcp');
+var async = require("async");
 
-console.log('hey');
+//var local_ip = NetworkInfo.getIPAddress(ip => () => return(ip));
+//alert(local_ip);
+
+var local_ip = null;
+var local_subnet = null;
+var local_netmask = null;
+
+NetworkInfo.getIPAddress(ip => { returnValue('local_ip', ip); });
+
+function returnValue(method, value) {
+  switch (method) {
+    case 'local_ip': 
+      local_ip = value;
+      alert('value : ' + value);
+      break;
+    case 'local_subnet':
+      local_subnet = value;
+      break;
+    case 'local_netmask':
+      local_netmask = value;
+      break;
+  }
+}
+
+//alert(local_ip);
+
+/*console.log('hey');
 var iphex = sip.convertIPtoHex('192.168.1.1');
 console.log('ip address : ' + iphex);
 
@@ -31,7 +59,7 @@ client.on('data', function(data) {
   client.write("GET / HTTP/1.0\r\n\r\n");
 }).on('end', function() {
   console.log('DONE');
-});
+});*/
 
 
 const instructions = Platform.select({
