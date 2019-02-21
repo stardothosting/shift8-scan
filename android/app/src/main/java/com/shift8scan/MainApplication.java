@@ -3,6 +3,7 @@ package com.shift8scan;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.stonem.sockets.SocketsPackage;
 import com.example.habibi.mynativemodule.MyNativeModulePackage;
 import com.pusherman.networkinfo.RNNetworkInfoPackage;
 import com.peel.react.TcpSocketsModule;
@@ -26,6 +27,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new SocketsPackage(),
             new MyNativeModulePackage(),
             new RNNetworkInfoPackage(),
             new TcpSocketsModule()

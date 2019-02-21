@@ -16,6 +16,7 @@
     "react-native": "^0.58.5",
     "react-native-network": "^1.0.3",
     "react-native-network-info": "^4.0.1",
+    "react-native-sockets": "0.0.4",
     "react-native-tcp": "^3.3.0",
     "readable-stream": "^1.0.33",
     "shift8-ip-func": "^1.0.4",
