@@ -8,13 +8,16 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View, DeviceEventEmitter} from 'react-native';
+import {Platform, StyleSheet, Text, View, AppRegistry, ScrollView} from 'react-native';
 
 
 // Custom requires
 import { NetworkInfo } from 'react-native-network-info';
 var sip = require ('shift8-ip-func');
-//var net = require('react-native-tcp');
+
+var net = require('react-native-tcp');
+//var net = require('net');
+
 import SubnetmaskModule from 'get-subnet-mask';
 var async = require("async");
 var ipaddr = require('ipaddr.js');
@@ -31,10 +34,7 @@ var lastHostHex = null;
 var ipRange = null;
 var ipRange = null;
 //var portRange = [ 20, 21, 22, 25, 80, 110, 139, 143, 443, 3389 ]
-var portRange = [ 3389, 80, 443 ]
-
-scanTCPHost('10.0.1.102', 80);
-
+var portRange = [ 80, 443 ]
 
 // Must load all variables in sequence asynchronously
 async.series([
@@ -71,13 +71,13 @@ async.series([
   *************************/
   function(callback) {
     // Loop through all IPs in a scan
-    /*async.eachSeries(ipRange, function(singleIP, callback) {
+    async.eachSeries(ipRange, function(singleIP, callback) {
       // Loop within the loop to cycle through array of common ports
       async.eachSeries(portRange, function(singlePort, callbackPort) {
         var q = async.queue(async.asyncify(async function(singlePort) {
           return await scanTCPHost(singleIP, singlePort);
         }));
-        console.log('scanning ' + singleIP); 
+        console.log('************* scanning ' + singleIP); 
         q.push(singlePort);  
         callbackPort();
       }, function(err) {
@@ -96,7 +96,7 @@ async.series([
           console.log('success ip!');
         }
       }
-    );*/
+    );
   }
   ]);
 
@@ -119,31 +119,29 @@ client.on('data', function(data) {
 });*/
 
 function scanTCPHost(host,port) {
-  config={
-    address: "10.0.1.102", //ip address of server
-    port: 80, //port of socket server
-    reconnect:false, //OPTIONAL (default false): auto-reconnect on lost server
-    reconnectDelay:500, //OPTIONAL (default 500ms): how often to try to auto-reconnect
-    maxReconnectAttempts:10, //OPTIONAL (default infinity): how many time to attemp to auto-reconnect
-  }
-  Sockets.startClient(config);
-  //on connected
-   DeviceEventEmitter.addListener('socketClient_connected', () => {
-    alert('socketClient_connected');
+  var client = net.connect({
+    host: host,
+    port: port
+  },
+  function() { //'connect' listener
+    alert('connected to server : ' + host + ' on port : ' + port);
+    client.end();
+    return true;
+    //client.write('GET / HTTP/1.0\r\n\r\n');
   });
-  //on error
-  DeviceEventEmitter.addListener('socketClient_error', (data) => {
-    console.log('socketClient_error',data.error);
+  client.on('error', function(err) {
+    //alert('error : ' + JSON.stringify(err));
+    client.end();
+    return false;
   });
-  //on new message
-  DeviceEventEmitter.addListener('socketClient_data', (payload) => {
-    console.log('socketClient_data message:', payload.data);
+  /*client.on('data', function(data) {
+    alert(JSON.stringify(data));
+    client.end();
   });
-  //on client closed
-  DeviceEventEmitter.addListener('socketClient_closed', (data) => {
-    console.log('socketClient_closed',data.error);
-  });
-
+  client.on('end', function() {
+    console.log('disconnected from server');
+  });*/
+  return true;
 }
 
 
