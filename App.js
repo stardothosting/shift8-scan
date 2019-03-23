@@ -12,12 +12,10 @@ import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, Fl
 
 // Custom requires
 import { NetworkInfo } from 'react-native-network-info';
-var sip = require ('shift8-ip-func');
-
-var net = require('react-native-tcp');
-//var net = require('net');
-
+import HTML from 'react-native-render-html';
 import SubnetmaskModule from 'get-subnet-mask';
+var sip = require ('shift8-ip-func');
+var net = require('react-native-tcp');
 var async = require("async");
 var ipaddr = require('ipaddr.js');
 
@@ -34,9 +32,41 @@ var ipRange = null;
 var ipRange = null;
 //var portRange = [ 20, 21, 22, 25, 80, 110, 139, 143, 443, 3389 ]
 var portRange = [ 80, 443 ];
-var scanResult = new Array();
-var res = null;
-var test_outside = null;
+var scanResult = null;
+var scan = [];
+var test_var = null;
+
+var fetchData = function () {
+ return new Promise(function (resolve, reject) {
+    resolve();
+  });
+};
+
+var scanHost = function(hostIP, hostPort) {
+  return new Promise(function (resolve,reject) {
+    var client = net.connect({
+      host: hostIP,
+      port: hostPort
+    }, 
+    function() { //'connect' listener
+      client.end();
+      //console.log('@@@@@@@@@@@@@@@@@@@ CONNECTED ' + hostIP);
+      var scan_result = {
+        ip:hostIP, 
+        port:hostPort
+      };
+      resolve(scan_result);
+      //resolve('!!!!!!!!!!! connected to server : ' + hostIP + ' on port : ' + hostPort);
+      //this.setState({myText : scanResult});
+      //console.log('*********** connected to server : ' + ipRange[i] + ' on port : ' + portRange[j])
+      //client.end();
+    });
+    client.on('error', function(err) {
+      console.log('******* ERROR : ' + JSON.stringify(err));
+      client.end();
+    });
+  });
+}
 
 const instructions = Platform.select({
   ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
@@ -52,117 +82,57 @@ export default class App extends Component<Props> {
     super(props);
     this.state = {
       listContent: [],
+      myText: 'original text'
     }
   }
 
-  triggerScan = () => {
-    var promise1 = new Promise(function(resolve, reject) {
 
-    // Must load all variables in sequence asynchronously
-    async.series([
-      /****************************
-      * Assign all local IP data  *
-      *****************************/
-      function(callback) {
+
+  triggerScan = () => {
+
+    // Gather Network Info
+    var network_promise = new Promise(function(resolve, reject) {
         NetworkInfo.getIPAddress(ip => { 
           local_ip = ip; 
-          NetworkInfo.getBroadcast(address => {
+          NetworkInfo.getBroadcast(address => { 
             local_broadcast = address; 
-            SubnetmaskModule.getSubnet((sb) => { 
-              local_netmask = sb; 
-              callback(); 
-            });
+              SubnetmaskModule.getSubnet((sb) => {
+                local_netmask = sb;
+                subconv = ipaddr.IPv4.parse(local_netmask).prefixLengthFromSubnetMask();
+                firstHost = ipaddr.IPv4.networkAddressFromCIDR(local_ip + "/" + subconv);
+                lastHost = ipaddr.IPv4.broadcastAddressFromCIDR(local_ip + "/" + subconv);
+                firstHostHex = sip.convertIPtoHex(firstHost);
+                lastHostHex = sip.convertIPtoHex(lastHost);
+                ipRange = sip.getIPRange(firstHostHex,lastHostHex);
+                ipRange = ipRange.slice(1); // Remove the first ip in the array
+                resolve({
+                  local_ip: local_ip, 
+                  local_broadcast: local_broadcast, 
+                  local_netmask: local_netmask, 
+                  subnet_conv: subconv, 
+                  first_host: firstHost, 
+                  last_host: lastHost,
+                  first_host_hex: firstHostHex, 
+                  last_host_hex: lastHostHex, 
+                  ip_range: ipRange
+                });
+              });
           });
         });
-      },
-      /*************************************************
-      * Assign All IP data once everything is obtained *
-      *************************************************/
-      function(callback) {
-          subconv = ipaddr.IPv4.parse(local_netmask).prefixLengthFromSubnetMask();
-          firstHost = ipaddr.IPv4.networkAddressFromCIDR(local_ip + "/" + subconv);
-          lastHost = ipaddr.IPv4.broadcastAddressFromCIDR(local_ip + "/" + subconv);
-          firstHostHex = sip.convertIPtoHex(firstHost);
-          lastHostHex = sip.convertIPtoHex(lastHost);
-          ipRange = sip.getIPRange(firstHostHex,lastHostHex);
-          ipRange = ipRange.slice(1); // Remove the first ip in the array
-          callback();
-      },
-      /*************************
-      * Start array loop scans *
-      *************************/
-      function(callback) {
-
-        test_outside = '1234';
-
-
-        // Loop through all IPs in a scan
-        async.eachSeries(ipRange, function(singleIP, callback) {
-          // Loop within the loop to cycle through array of common ports
-          async.eachSeries(portRange, function(singlePort, callback) {
-            //var q = async.queue(
-              //async.asyncify(async function(callback) {
-                var client = net.connect({
-                  host: singleIP,
-                  port: singlePort
-                },
-                function(callback) { //'connect' listener
-                  //alert('connected to server : ' + singleIP + ' on port : ' + singlePort);
-
-                  scanResult.push('connected to server : ' + singleIP + ' on port : ' + singlePort);
-                  //alert(res);
-                  //scanResult.push(res);
-                  //client.end();
-                  //client.write('GET / HTTP/1.0\r\n\r\n');
-                });
-                client.on('error', function(err) {
-                  //alert('error : ' + JSON.stringify(err));
-                  client.end();
-                });
-            //}
-            //));
-            console.log('************* scanning ' + singleIP);
-
-            //alert(JSON.stringify(scanResult));
-            //q.push(singlePort);  
-            callback();
-          }, function(err, res) {
-            if (err) {
-              //console.log('error happened with port');
-            } else {
-              //console.log('success port!');
-              //alert(JSON.stringify(res));
-              alert(JSON.stringify(test_outside));
-
-
-            }
-          }
-          );
-            callback();
-          }, function(err,result) {
-            if (err) {
-              console.log('error happened');
-            } else {
-              //alert(JSON.stringify(scanResult));
-            }
-          }
-        );
-        alert(res);
-        callback(res);
-      },
-      function() {
-        console.log('last function');
-      }
-      ]);
-    }); // end promise
-    promise1.then(function(value) {
-      //alert(JSON.stringify(test_outside));
-      //console.log(JSON.stringify(value);
-
-      alert('****** ALL DONE***');
-      // expected output: "Success!"
     });
 
+    // Get variables and use them
+    network_promise.then((response) => {
+      for (let i = 0; i < response["ip_range"].length; i++) {
+        for (let j = 0; j < portRange.length; j++) {
+          scanHost(response["ip_range"][i], portRange[j]).then(response => {
+            this.setState(prevState => ({
+              listContent : [prevState.listContent, response]
+            }));
+          });
+        }
+      }
+    });
   }
   render() {
     return (
@@ -171,7 +141,6 @@ export default class App extends Component<Props> {
         <Text style={styles.instructions}>To get started, edit App.js</Text>
         <Text style={styles.instructions}>{instructions}</Text>
         <Button onPress = {this.triggerScan} title="hit me." color="#841584" accessibilityLabel="hit me."/>
-        <TextInput editable={false} ref={component=> this._MyComponent=component}/>
       </View>
     );
   }
