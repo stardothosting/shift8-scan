@@ -9,10 +9,10 @@
 
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button} from 'react-native';
+import { List, ListItem } from 'react-native-elements';
 
 // Custom requires
 import { NetworkInfo } from 'react-native-network-info';
-import HTML from 'react-native-render-html';
 import SubnetmaskModule from 'get-subnet-mask';
 var sip = require ('shift8-ip-func');
 var net = require('react-native-tcp');
@@ -30,18 +30,12 @@ var firstHostHex = null;
 var lastHostHex = null;
 var ipRange = null;
 var ipRange = null;
-//var portRange = [ 20, 21, 22, 25, 80, 110, 139, 143, 443, 3389 ]
 var portRange = [ 80, 443 ];
 var scanResult = null;
 var scan = [];
 var test_var = null;
 
-var fetchData = function () {
- return new Promise(function (resolve, reject) {
-    resolve();
-  });
-};
-
+// Function to scan hosts
 var scanHost = function(hostIP, hostPort) {
   return new Promise(function (resolve,reject) {
     var client = net.connect({
@@ -56,10 +50,6 @@ var scanHost = function(hostIP, hostPort) {
         port:hostPort
       };
       resolve(scan_result);
-      //resolve('!!!!!!!!!!! connected to server : ' + hostIP + ' on port : ' + hostPort);
-      //this.setState({myText : scanResult});
-      //console.log('*********** connected to server : ' + ipRange[i] + ' on port : ' + portRange[j])
-      //client.end();
     });
     client.on('error', function(err) {
       console.log('******* ERROR : ' + JSON.stringify(err));
@@ -141,6 +131,11 @@ export default class App extends Component<Props> {
         <Text style={styles.instructions}>To get started, edit App.js</Text>
         <Text style={styles.instructions}>{instructions}</Text>
         <Button onPress = {this.triggerScan} title="hit me." color="#841584" accessibilityLabel="hit me."/>
+        <FlatList 
+           data={this.state.listContent}
+           extraData={this.state.listContent}
+           renderItem={({item}) => <Text>{item.ip} {item.port}</Text>}
+        />
       </View>
     );
   }
@@ -156,7 +151,7 @@ const styles = StyleSheet.create({
   welcome: {
     fontSize: 20,
     textAlign: 'center',
-    marginTop: -80,
+    marginTop: 100,
   },
   instructions: {
     textAlign: 'center',

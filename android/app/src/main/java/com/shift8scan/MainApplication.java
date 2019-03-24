@@ -3,10 +3,7 @@ package com.shift8scan;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.stonem.sockets.SocketsPackage;
-import com.example.habibi.mynativemodule.MyNativeModulePackage;
-import com.pusherman.networkinfo.RNNetworkInfoPackage;
-import com.peel.react.TcpSocketsModule;
+import com.oblador.vectoricons.VectorIconsPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -27,10 +24,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new SocketsPackage(),
-            new MyNativeModulePackage(),
-            new RNNetworkInfoPackage(),
-            new TcpSocketsModule()
+            new VectorIconsPackage()
       );
     }
 

@@ -1,11 +1,5 @@
 rootProject.name = 'shift8scan'
-include ':react-native-sockets'
-project(':react-native-sockets').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-sockets/android')
-include ':get-subnet-mask'
-project(':get-subnet-mask').projectDir = new File(rootProject.projectDir, '../node_modules/get-subnet-mask/android/app')
-include ':react-native-network-info'
-project(':react-native-network-info').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-network-info/android')
-include ':react-native-tcp'
-project(':react-native-tcp').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-tcp/android')
+include ':react-native-vector-icons'
+project(':react-native-vector-icons').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-vector-icons/android')
 
 include ':app'
