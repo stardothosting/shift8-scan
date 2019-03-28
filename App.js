@@ -1,6 +1,6 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
+ * Shift8 Scan
+ * https://www.shit8web.ca
  *
  * @format
  * @flow
@@ -8,8 +8,9 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button} from 'react-native';
+import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button, Dimensions, AppState} from 'react-native';
 import { List, ListItem } from 'react-native-elements';
+import { TabView, TabViewPage, TabBarTop, SceneMap } from 'react-native-tab-view';
 
 // Custom requires
 import { NetworkInfo } from 'react-native-network-info';
@@ -74,6 +75,7 @@ var scanHost = function(hostIP, hostPort) {
     client.on('connect', function() {
         //sleeper(200);
         //client.destroy();
+        client.end('finished');
         var scan_result = {
         ip:hostIP, 
         port:hostPort
@@ -114,7 +116,7 @@ var scanHost = function(hostIP, hostPort) {
       var isdestroyed = client.destroyed;
       console.log('Socket destroyed:' + isdestroyed);
       client.destroy();
-    },5000);
+    },2000);
   });
 }
 
@@ -124,19 +126,24 @@ const instructions = Platform.select({
     'Double tap R on your keyboard to reload,\n' +
     'Shake or press menu button for dev menu',
 });
-  
+
+
 type Props = {};
+
 export default class App extends Component<Props> {
 
   constructor(props) {
     super(props);
     this.state = {
       listContent: [],
-      myText: 'original text'
+      index: 0,
+      routes: [
+        { key: 'main', title: 'Scan' },
+        { key: 'settings', title: 'Settings' },
+        { key: 'about', title: 'About' },
+      ],
     }
   }
-
-
 
   triggerScan = () => {
     // Gather Network Info
@@ -214,20 +221,50 @@ renderRow ({ item }) {
 
 keyExtractor = (item, index) => index.toString()
 
+// Main render with state updates
+  _renderScene = ({ route }) => {
+    switch (route.key) {
+      case 'main':
+        return (
+            <View style={styles.container}>
+            <Text style={styles.welcome}>Welcome to Shift8 Scan!</Text>
+            <Text style={styles.instructions}>To get started, edit App.js</Text>
+            <Text style={styles.instructions}>{instructions}</Text>
+            <Button onPress = {this.triggerScan} title="hit me." color="#841584" accessibilityLabel="hit me."/>
+            <FlatList 
+               keyExtractor={this.keyExtractor}
+               data={this.state.listContent}
+               extraData={this.state.listContent}
+               renderItem={this.renderRow}
+            />
+          </View>
+        );
+      case 'settings':
+        return (
+          <View style={styles.container}>
+          <Text>Settings Placeholder</Text>
+          </View>
+        );
+      case 'about':
+        return (
+          <View style={styles.container}>
+          <Text>About Placeholder</Text>
+          </View>
+        );
+    }
+  }
+
+  _renderPage = (props) => <TabViewPage {...props} renderScene={this._renderScene} />;
+
   render() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to Shift8 Scan!</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
-        <Button onPress = {this.triggerScan} title="hit me." color="#841584" accessibilityLabel="hit me."/>
-        <FlatList 
-           keyExtractor={this.keyExtractor}
-           data={this.state.listContent}
-           extraData={this.state.listContent}
-           renderItem={this.renderRow}
-        />
-      </View>
+      <TabView
+        navigationState={this.state}
+        tabBarPosition={'bottom'}
+        renderScene={this._renderScene}
+        onIndexChange={index => this.setState({ index })}
+        initialLayout={{ width: 100 }}
+      />
     );
   }
 }
