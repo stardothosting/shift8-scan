@@ -18,6 +18,7 @@ import SubnetmaskModule from 'get-subnet-mask';
 import TouchableScale from 'react-native-touchable-scale'; // https://github.com/kohver/react-native-touchable-scale
 import LinearGradient from 'react-native-linear-gradient'; // Only if no expo
 import ToggleSwitch from 'toggle-switch-react-native';
+var debounce = require('lodash.debounce');
 var sip = require ('shift8-ip-func');
 var net = require('react-native-tcp');
 var async = require("async");
@@ -39,11 +40,6 @@ var scan = [];
 var test_var = null;
 
 // Function to add delay
-/*function sleeper(ms) {
-  return function(x) {
-    return new Promise(resolve => setTimeout(() => resolve(x), ms));
-  };
-}*/
 var sleeper = function (ms) {
  return new Promise(function (resolve, reject) {
     setTimeout(() => resolve(), ms);
@@ -59,6 +55,7 @@ var fetchData = function () {
 // Function to scan hosts
 var scanHost = function(hostIP, hostPort) {
   return new Promise(function (resolve,reject) {
+  //var scan_result = new Promise(function(resolve,reject) {  
     //console.log('%%%%%%%%% DOING ' + hostIP + ' ON ' + hostPort)
     var client = net.connect({
       host: hostIP,
@@ -66,7 +63,8 @@ var scanHost = function(hostIP, hostPort) {
     }, 
     function() { //'connect' listener
       //client.destroy();
-      client.end();
+      //alert('hey');
+      //client.end();
       console.log('Connected');
     });
     
@@ -254,24 +252,89 @@ export default class App extends Component<Props> {
     // Get variables and use them
     network_promise.then((response) => {
       // Clear scan result array
-      this.setState({ listContent: [] });
+      //this.setState({ listContent: [] });
+      var portScan = JSON.parse(this.state.portScan);
 
-      for (let i = 0; i < response["ip_range"].length; i++) {
+      // Nested for-loops to iterate across ips and ports
+      for (let i = 0, p = Promise.resolve(); i < response["ip_range"].length; i++) {
+          p = p.then(_ => new Promise(resolve_1 =>
+              setTimeout(function () {
+                // nested start
+                for (let j = 0, q = Promise.resolve(); j < portScan.length; j++) {
+                    q = q.then(_ => new Promise(resolve_2 =>
+                        setTimeout(function () {
+                          Promise.resolve()
+                          .then(scanHost(response["ip_range"][i], portScan[j])
+                            .then(ok => { 
+                              scanResult.push(ok);
+                            }))
+                          .then(
+                            resolve_2(scanResult)
+                          )
+                        }, 10)
+                    ));
+                }
+                // nested end
+                resolve_1(scanResult);
+              }, 1)
+          ));
+          p.then(response => {
+            if (scanResult && scanResult.length > 0) {
+                this.setState({ listContent: [...this.state.listContent, scanResult]});
+                this.setState({ listContent: scanResult});
+            }
+          });
+      }
+
+
+        
+
+      /*for (let i = 0; i < response["ip_range"].length; i++) {
         for (let j = 0; j < this.state.portScan.length; j++) {
           //alert('Scanning ports : ' + JSON.stringify(this.state.portScan));
           //sleeper(2000)
           scanHost(response["ip_range"][i], this.state.portScan[j])
           .then(sleeper(10000))
           .then(response => {
-            scanResult.push(response);
-            this.setState({ 
-              listContent: this.state.listContent.concat([response])
-            });
-            this.setState(state => {
-              const list = state.listContent.map((item, j) => {
-                alert(JSON.stringify(item));
+            //scanResult.push(response);
+            if (this.state.listContent && this.state.listContent.length > 0) {
+              this.setState(state => {
+                let counter = 0;
+                const list = this.state.listContent.map((item, j) => {
+                  //if (item.ip == response['ip'] && item.port != response['port']) {
+                    if (item.ip == response['ip']) {
+                    //alert('Found ' + item.ip + ' for port ' + item.port);
+                    let scan_object = {...this.state.listContent};
+                    //alert(JSON.stringify(scan_object[j]));
+                    scan_object[counter].port.push(response['port']);
+                    this.setState({
+                      listContent: this.state.listContent.concat([scan_object[counter]])
+                    });
+                    console.log('!!!!!!!!!!!!!!!!!!!!!! LISTCONTENT : ' + JSON.stringify(this.state.listContent));
+                    counter++;
+                    console.log('%%%%%%%%%% COUNTER ' + counter);
+                  }
+                });
               });
-            });
+            } else {
+              var copyValuesEmpty = [{
+                ip : response['ip'],
+                port : [ response['port'] ],
+              }];
+              this.setState({ 
+                listContent: copyValuesEmpty
+              });
+            } 
+
+
+            //else {
+              //console.log('!!!!!!!!!!!!!!!!######## HERE TOO');
+              //this.setState(state => {
+              //  const list = state.listContent.map((item, j) => {
+              //    alert(JSON.stringify(item));
+              //  });
+              //});
+            //}
             //alert(JSON.stringify(response['ip']));
             //this.setState({ 
             //  listContent: this.state.listContent.concat([response])
@@ -283,7 +346,7 @@ export default class App extends Component<Props> {
             return err;
           })
         }
-      }
+      }*/
     })
     .catch(err => {
       console.error(err);
@@ -294,8 +357,12 @@ export default class App extends Component<Props> {
   _renderScan = () => {
     if (this.state.showScan) {
       return (
-          <TouchableOpacity onPress={this.triggerScan}>
-            <Text style={styles.button}>Click Me!</Text>
+          <TouchableOpacity 
+            onPress={this.triggerScan} 
+            accessibilityRole="link"
+            {...this.props}
+          >
+            <Text style={styles.button} accessibilityRole="link">Click Me!</Text>
           </TouchableOpacity>
 
       );
@@ -433,7 +500,7 @@ keyExtractor = (item, index) => index.toString()
     return (
       (!item.length?
         <View key={item.ip}>
-          <Text>{item.ip}</Text>
+          <Text>{item.ip} {item.port}</Text>
         </View>
         : null)
 
