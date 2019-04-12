@@ -462,8 +462,8 @@ keyExtractor = (item, index) => index.toString()
           title={item.ip}
           titleStyle={{ color: 'black', fontWeight: 'bold' }}
           subtitleStyle={{ color: 'black' }}
-          subtitle={`Port : ${item.port}`}
-          badge={{ value: `${item.port}`, textStyle: { color: 'white' }, containerStyle: { marginTop: -20 } }}
+          //subtitle={`Port : ${item.ports}`}
+          badge={{ value: `${item.ports}`, textStyle: { color: 'white' }, containerStyle: { marginTop: -20 } }}
         />
         : null)
     )
