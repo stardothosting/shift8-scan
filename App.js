@@ -8,7 +8,7 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button, TouchableOpacity, Dimensions, AppState, NetInfo, AsyncStorage} from 'react-native';
+import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button, TouchableOpacity, Dimensions, AppState, NetInfo, AsyncStorage, SectionList} from 'react-native';
 import { List, ListItem, Badge, Icon, Avatar, withBadge } from 'react-native-elements';
 import { TabView, TabViewPage, TabBarTop, SceneMap } from 'react-native-tab-view';
 
@@ -39,6 +39,18 @@ var scanResult = [];
 var scan = [];
 var test_var = null;
 
+// Function to ensure array items are unique
+Array.prototype.unique = function() {
+    var a = this.concat();
+    for(var i=0; i<a.length; ++i) {
+        for(var j=i+1; j<a.length; ++j) {
+            if(a[i] === a[j])
+                a.splice(j--, 1);
+        }
+    }
+    return a;
+};
+
 // Function to add delay
 var sleeper = function (ms) {
  return new Promise(function (resolve, reject) {
@@ -46,25 +58,14 @@ var sleeper = function (ms) {
   });
 };
 
-var fetchData = function () {
- return new Promise(function (resolve, reject) {
-    resolve();
-  });
-};
-
 // Function to scan hosts
 var scanHost = function(hostIP, hostPort) {
   return new Promise(function (resolve,reject) {
-  //var scan_result = new Promise(function(resolve,reject) {  
-    //console.log('%%%%%%%%% DOING ' + hostIP + ' ON ' + hostPort)
     var client = net.connect({
       host: hostIP,
       port: hostPort
     }, 
     function() { //'connect' listener
-      //client.destroy();
-      //alert('hey');
-      //client.end();
       console.log('Connected');
     });
     
@@ -104,10 +105,7 @@ var scanHost = function(hostIP, hostPort) {
     }); 
 
     client.on('error', function(err) {
-      //sleeper(2000);
-      //console.log('******* ERROR : ' + JSON.stringify(err));
       client.destroy();
-      //reject(err);
     });
 
     setTimeout(function(){
@@ -265,8 +263,21 @@ export default class App extends Component<Props> {
                         setTimeout(function () {
                           Promise.resolve()
                           .then(scanHost(response["ip_range"][i], portScan[j])
-                            .then(ok => { 
-                              scanResult.push(ok);
+                            .then(ok => {
+                              // Prepare object to push
+                              var scanPush = {};
+                              scanPush["ip"] = ok.ip;
+                              scanPush["ports"] = [ok.port];
+
+                              // Check if IP exists in array yet
+                              var arr_check = scanResult.findIndex(x => x.ip == scanPush["ip"]);
+                              if (arr_check === -1) {
+                                  scanResult.push(scanPush);
+                              } else {
+                                  // If ip exists, merge ports old and new and remove duplicates
+                                  scanPush["ports"] = scanResult[arr_check].ports.concat(scanPush["ports"]).unique();
+                                  scanResult[arr_check] = scanPush;
+                              }                              
                             }))
                           .then(
                             resolve_2(scanResult)
@@ -282,71 +293,10 @@ export default class App extends Component<Props> {
             if (scanResult && scanResult.length > 0) {
                 this.setState({ listContent: [...this.state.listContent, scanResult]});
                 this.setState({ listContent: scanResult});
+                //console.log('SCAN RESULT : ' + JSON.stringify(scanResult));
             }
           });
       }
-
-
-        
-
-      /*for (let i = 0; i < response["ip_range"].length; i++) {
-        for (let j = 0; j < this.state.portScan.length; j++) {
-          //alert('Scanning ports : ' + JSON.stringify(this.state.portScan));
-          //sleeper(2000)
-          scanHost(response["ip_range"][i], this.state.portScan[j])
-          .then(sleeper(10000))
-          .then(response => {
-            //scanResult.push(response);
-            if (this.state.listContent && this.state.listContent.length > 0) {
-              this.setState(state => {
-                let counter = 0;
-                const list = this.state.listContent.map((item, j) => {
-                  //if (item.ip == response['ip'] && item.port != response['port']) {
-                    if (item.ip == response['ip']) {
-                    //alert('Found ' + item.ip + ' for port ' + item.port);
-                    let scan_object = {...this.state.listContent};
-                    //alert(JSON.stringify(scan_object[j]));
-                    scan_object[counter].port.push(response['port']);
-                    this.setState({
-                      listContent: this.state.listContent.concat([scan_object[counter]])
-                    });
-                    console.log('!!!!!!!!!!!!!!!!!!!!!! LISTCONTENT : ' + JSON.stringify(this.state.listContent));
-                    counter++;
-                    console.log('%%%%%%%%%% COUNTER ' + counter);
-                  }
-                });
-              });
-            } else {
-              var copyValuesEmpty = [{
-                ip : response['ip'],
-                port : [ response['port'] ],
-              }];
-              this.setState({ 
-                listContent: copyValuesEmpty
-              });
-            } 
-
-
-            //else {
-              //console.log('!!!!!!!!!!!!!!!!######## HERE TOO');
-              //this.setState(state => {
-              //  const list = state.listContent.map((item, j) => {
-              //    alert(JSON.stringify(item));
-              //  });
-              //});
-            //}
-            //alert(JSON.stringify(response['ip']));
-            //this.setState({ 
-            //  listContent: this.state.listContent.concat([response])
-            //});
-
-          })
-          .catch(err => {
-            console.error(err);
-            return err;
-          })
-        }
-      }*/
     })
     .catch(err => {
       console.error(err);
@@ -498,13 +448,13 @@ keyExtractor = (item, index) => index.toString()
 
   renderRow ({ item }) {
     return (
-      (!item.length?
+      /*(!item.length?
         <View key={item.ip}>
           <Text>{item.ip} {item.port}</Text>
         </View>
-        : null)
+        : null)*/
 
-      /*(!item.length?
+      (!item.length?
         <ListItem
           roundAvatar
           style={{width:200, height:100}}
@@ -515,7 +465,7 @@ keyExtractor = (item, index) => index.toString()
           subtitle={`Port : ${item.port}`}
           badge={{ value: `${item.port}`, textStyle: { color: 'white' }, containerStyle: { marginTop: -20 } }}
         />
-        : null)*/
+        : null)
     )
   }
 
