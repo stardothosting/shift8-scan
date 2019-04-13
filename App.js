@@ -140,7 +140,7 @@ export default class App extends Component<Props> {
         { key: 'settings', title: 'Settings' },
         { key: 'about', title: 'About' },
       ],
-      portScan: [ '21', '22', '25', '80', '443', '3389' ],
+      portScan: [],
       isOnPort21ToggleSwitch: true,
       isOnPort22ToggleSwitch: true,
       isOnPort25ToggleSwitch: true,
@@ -151,15 +151,29 @@ export default class App extends Component<Props> {
   }
 
   componentDidMount() {
-    AsyncStorage.getItem('portScan').then((value) => this.setState({ 'portScan': JSON.parse(value) || JSON.stringify([ '21', '22', '25', '80', '443', '3389' ]) })).done();
+    AsyncStorage.getItem('portScan').then((item) => {
+      if (item) {
+        var parsed_item = JSON.parse(item);
+        this.setState({ 'portScan': JSON.parse(item) });
+        item.indexOf("21") > -1 ? this.setState({ 'isOnPort21ToggleSwitch' : true }) : this.setState({ 'isOnPort21ToggleSwitch' : false});
+        item.indexOf("22") > -1 ? this.setState({ 'isOnPort22ToggleSwitch' : true }) : this.setState({ 'isOnPort22ToggleSwitch' : false});
+        item.indexOf("25") > -1 ? this.setState({ 'isOnPort25ToggleSwitch' : true }) : this.setState({ 'isOnPort25ToggleSwitch' : false});
+        item.indexOf("80") > -1 ? this.setState({ 'isOnPort80ToggleSwitch' : true }) : this.setState({ 'isOnPort80ToggleSwitch' : false});
+        item.indexOf("443") > -1 ? this.setState({ 'isOnPort443ToggleSwitch' : true }) : this.setState({ 'isOnPort443ToggleSwitch' : false});
+        item.indexOf("3389") > -1 ? this.setState({ 'isOnPort3389ToggleSwitch' : true }) : this.setState({ 'isOnPort3389ToggleSwitch' : false});
+      } else {
+        this.setState({ 'portScan' : JSON.stringify([ '21', '22', '25', '80', '443', '3389' ]) });
+        this.setState({ 'isOnPort21ToggleSwitch' : true });
+        this.setState({ 'isOnPort22ToggleSwitch' : true });
+        this.setState({ 'isOnPort25ToggleSwitch' : true });
+        this.setState({ 'isOnPort80ToggleSwitch' : true });
+        this.setState({ 'isOnPort443ToggleSwitch' : true });
+        this.setState({ 'isOnPort3389ToggleSwitch' : true });
+        AsyncStorage.setItem('portScan', JSON.stringify([ '21', '22', '25', '80', '443', '3389' ]));
+      }
 
-    /*AsyncStorage.getItem('portScan').hasOwnProperty("21") == true ? this.setState({ 'isOnPort21ToggleSwitch' : true }) : this.setState({ 'isOnPort21ToggleSwitch' : false});
-    AsyncStorage.getItem('portScan').hasOwnProperty("22") == true ? this.setState({ 'isOnPort22ToggleSwitch' : true }) : this.setState({ 'isOnPort22ToggleSwitch' : false});
-    AsyncStorage.getItem('portScan').hasOwnProperty("25") == true ? this.setState({ 'isOnPort25ToggleSwitch' : true }) : this.setState({ 'isOnPort25ToggleSwitch' : false});
-    AsyncStorage.getItem('portScan').hasOwnProperty("80") == true ? this.setState({ 'isOnPort80ToggleSwitch' : true }) : this.setState({ 'isOnPort80ToggleSwitch' : false});
-    AsyncStorage.getItem('portScan').hasOwnProperty("443") == true ? this.setState({ 'isOnPort443ToggleSwitch' : true }) : this.setState({ 'isOnPort443ToggleSwitch' : false});
-    AsyncStorage.getItem('portScan').hasOwnProperty("3389") == true ? this.setState({ 'isOnPort3389ToggleSwitch' : true }) : this.setState({ 'isOnPort3389ToggleSwitch' : false});
-    */
+    });
+
     NetInfo.addEventListener(
       'connectionChange',
       this._handleConnectivityChange
@@ -210,9 +224,9 @@ export default class App extends Component<Props> {
     if (this.state.isOnPort80ToggleSwitch == true) port_array.push('80');
     if (this.state.isOnPort443ToggleSwitch == true) port_array.push('443');
     if (this.state.isOnPort3389ToggleSwitch == true) port_array.push('3389');
-
-    this.setState({ portScan: port_array});
-    AsyncStorage.setItem('portScan', JSON.stringify(port_array));
+    resolve(port_array);
+    this.setState({ portScan: JSON.stringify(response) });
+    AsyncStorage.setItem('portScan', JSON.stringify(response));
   }
 
   triggerScan = () => {
@@ -448,16 +462,10 @@ keyExtractor = (item, index) => index.toString()
 
   renderRow ({ item }) {
     return (
-      /*(!item.length?
-        <View key={item.ip}>
-          <Text>{item.ip} {item.port}</Text>
-        </View>
-        : null)*/
-
       (!item.length?
         <ListItem
           roundAvatar
-          style={{width:200, height:100}}
+          style={{width:200, height:50}}
           key={item.ip}
           title={item.ip}
           titleStyle={{ color: 'black', fontWeight: 'bold' }}
