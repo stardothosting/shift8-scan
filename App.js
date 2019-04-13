@@ -38,6 +38,7 @@ var ipRange = null;
 var scanResult = [];
 var scan = [];
 var test_var = null;
+var scanPorts = [ "21" , "22" , "25" , "80", "443" , "3389" ];
 
 // Function to ensure array items are unique
 Array.prototype.unique = function() {
@@ -153,6 +154,7 @@ export default class App extends Component<Props> {
   componentDidMount() {
     AsyncStorage.getItem('portScan').then((item) => {
       if (item) {
+        //console.log('FOUND ITEM :  ' + JSON.stringify(item));
         var parsed_item = JSON.parse(item);
         this.setState({ 'portScan': JSON.parse(item) });
         item.indexOf("21") > -1 ? this.setState({ 'isOnPort21ToggleSwitch' : true }) : this.setState({ 'isOnPort21ToggleSwitch' : false});
@@ -162,14 +164,15 @@ export default class App extends Component<Props> {
         item.indexOf("443") > -1 ? this.setState({ 'isOnPort443ToggleSwitch' : true }) : this.setState({ 'isOnPort443ToggleSwitch' : false});
         item.indexOf("3389") > -1 ? this.setState({ 'isOnPort3389ToggleSwitch' : true }) : this.setState({ 'isOnPort3389ToggleSwitch' : false});
       } else {
-        this.setState({ 'portScan' : JSON.stringify([ '21', '22', '25', '80', '443', '3389' ]) });
+        //console.log('NOT FOUND ITEM');
+        this.setState({ 'portScan' : JSON.stringify(scanPorts) });
         this.setState({ 'isOnPort21ToggleSwitch' : true });
         this.setState({ 'isOnPort22ToggleSwitch' : true });
         this.setState({ 'isOnPort25ToggleSwitch' : true });
         this.setState({ 'isOnPort80ToggleSwitch' : true });
         this.setState({ 'isOnPort443ToggleSwitch' : true });
         this.setState({ 'isOnPort3389ToggleSwitch' : true });
-        AsyncStorage.setItem('portScan', JSON.stringify([ '21', '22', '25', '80', '443', '3389' ]));
+        AsyncStorage.setItem('portScan', JSON.stringify(scanPorts));
       }
 
     });
@@ -217,16 +220,28 @@ export default class App extends Component<Props> {
   };
 
   toggleSwitch = () => {
-    var port_array = new Array();
-    if (this.state.isOnPort21ToggleSwitch == true) port_array.push('21');
-    if (this.state.isOnPort22ToggleSwitch == true) port_array.push('22');
-    if (this.state.isOnPort25ToggleSwitch == true) port_array.push('25');
-    if (this.state.isOnPort80ToggleSwitch == true) port_array.push('80');
-    if (this.state.isOnPort443ToggleSwitch == true) port_array.push('443');
-    if (this.state.isOnPort3389ToggleSwitch == true) port_array.push('3389');
-    resolve(port_array);
-    this.setState({ portScan: JSON.stringify(response) });
-    AsyncStorage.setItem('portScan', JSON.stringify(response));
+    var port_toggle = new Array();
+    port_toggle["port21"] = this.state.isOnPort21ToggleSwitch;
+    port_toggle["port22"] = this.state.isOnPort22ToggleSwitch;
+    port_toggle["port25"] = this.state.isOnPort25ToggleSwitch;
+    port_toggle["port80"] = this.state.isOnPort80ToggleSwitch;
+    port_toggle["port443"] = this.state.isOnPort443ToggleSwitch;
+    port_toggle["port3389"] = this.state.isOnPort3389ToggleSwitch;
+
+    var toggle_ports = new Promise(function(resolve, reject) {
+      var port_array = new Array();
+      if (port_toggle["port21"] == true) port_array.push('21');
+      if (port_toggle["port22"] == true) port_array.push('22');
+      if (port_toggle["port25"] == true) port_array.push('25');
+      if (port_toggle["port80"] == true) port_array.push('80');
+      if (port_toggle["port443"] == true) port_array.push('443');
+      if (port_toggle["port3389"] == true) port_array.push('3389');
+      resolve(port_array);
+    });
+    toggle_ports.then((response) => {
+      this.setState({ portScan: JSON.stringify(response) });
+      AsyncStorage.setItem('portScan', JSON.stringify(response));
+    });
   }
 
   triggerScan = () => {
@@ -265,7 +280,7 @@ export default class App extends Component<Props> {
     network_promise.then((response) => {
       // Clear scan result array
       //this.setState({ listContent: [] });
-      var portScan = JSON.parse(this.state.portScan);
+      var portScan = this.state.portScan;
 
       // Nested for-loops to iterate across ips and ports
       for (let i = 0, p = Promise.resolve(); i < response["ip_range"].length; i++) {
