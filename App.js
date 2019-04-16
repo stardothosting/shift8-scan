@@ -13,7 +13,7 @@ import { List, ListItem, Badge, Icon, Avatar, withBadge } from 'react-native-ele
 import { TabView, TabViewPage, TabBarTop, SceneMap } from 'react-native-tab-view';
 
 // Custom requires
-//import AsyncStorage from '@react-native-community/async-storage';
+import * as Progress from 'react-native-progress';
 import { NetworkInfo } from 'react-native-network-info';
 import SubnetmaskModule from 'get-subnet-mask';
 import TouchableScale from 'react-native-touchable-scale'; // https://github.com/kohver/react-native-touchable-scale
@@ -71,7 +71,7 @@ var scanHost = function(hostIP, hostPort) {
       console.log('Connected');
     });
     
-    client.setTimeout(4000,function(){
+    client.setTimeout(2000,function(){
         // called after timeout -> same as socket.on('timeout')
         // it just tells that soket timed out => its ur job to end or destroy the socket.
         // socket.end() vs socket.destroy() => end allows us to send final data and allows some i/o activity to finish before destroying the socket
@@ -114,7 +114,7 @@ var scanHost = function(hostIP, hostPort) {
       var isdestroyed = client.destroyed;
       console.log('Socket destroyed:' + isdestroyed);
       client.destroy();
-    },6000);
+    },4000);
   });
 }
 
@@ -133,6 +133,7 @@ export default class App extends Component<Props> {
   constructor(props) {
     super(props);
     this.state = {
+      progress: 0,
       listContent: [],
       connection_Status: '',
       showScan: false,
@@ -231,7 +232,7 @@ export default class App extends Component<Props> {
     if (this.state.isOnPort3389ToggleSwitch) { port_array.push('3389'); console.log('port3389');}
     
     console.log('Port array : ' + JSON.stringify(port_array));
-    this.setState({ portScan: port_array });
+    this.setState({ portScan: port_array  });
     AsyncStorage.setItem('@portScan', JSON.stringify(port_array));
   }
 
@@ -276,6 +277,7 @@ export default class App extends Component<Props> {
 
       // Nested for-loops to iterate across ips and ports
       for (let i = 0, p = Promise.resolve(); i < response["ip_range"].length; i++) {
+        var total_ips = response["ip_range"].length;
           p = p.then(_ => new Promise(resolve_1 =>
               setTimeout(function () {
                 // nested start
@@ -315,6 +317,9 @@ export default class App extends Component<Props> {
                 this.setState({ listContent: [...this.state.listContent, scanResult]});
                 this.setState({ listContent: scanResult});
                 //console.log('SCAN RESULT : ' + JSON.stringify(scanResult));
+                console.log('IP Address : ' + i + ' out of total : ' + total_ips);
+                var current_progress = i / total_ips;
+                this.setState({ progress: current_progress });
             }
           });
       }
@@ -333,7 +338,7 @@ export default class App extends Component<Props> {
             accessibilityRole="link"
             {...this.props}
           >
-            <Text style={styles.button} accessibilityRole="link">Click Me!</Text>
+            <Text style={styles.button} accessibilityRole="link">Scan Your Network</Text>
           </TouchableOpacity>
 
       );
@@ -354,7 +359,11 @@ keyExtractor = (item, index) => index.toString()
             <View style={styles.container}>
             <View style={styles.main}>
             {this._renderScan()} 
-            <Text style={{fontSize: 20, textAlign: 'center', marginBottom: 20}}> You are { this.state.connection_Status } </Text>
+            <Progress.Bar
+            style={styles.progress}
+            progress={this.state.progress}
+            indeterminate={this.state.indeterminate}
+            />
             </View>
             <FlatList 
                keyExtractor={(item, index) => index.toString() }
@@ -484,7 +493,7 @@ keyExtractor = (item, index) => index.toString()
       (!item.length?
         <ListItem
           roundAvatar
-          style={{width:200, height:50}}
+          style={{width:250, height:50}}
           key={item.ip}
           title={item.ip}
           titleStyle={{ color: 'black', fontWeight: 'bold' }}
@@ -540,5 +549,8 @@ const styles = StyleSheet.create({
    },
    tab: {
     backgroundColor: '#c83539',
-   }
+   },
+   progress: {
+    margin: 10,
+  },
 });
