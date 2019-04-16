@@ -10,7 +10,7 @@
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button, TouchableOpacity, Dimensions, AppState, NetInfo, SectionList, Switch, AsyncStorage, Linking} from 'react-native';
 import { List, ListItem, Badge, Icon, Avatar, withBadge } from 'react-native-elements';
-import { TabView, TabViewPage, TabBarTop, SceneMap } from 'react-native-tab-view';
+import { TabView, TabViewPage, TabBar, TabBarTop, SceneMap } from 'react-native-tab-view';
 
 // Custom requires
 import * as Progress from 'react-native-progress';
@@ -494,16 +494,24 @@ keyExtractor = (item, index) => index.toString()
     }
   }
 
-  _renderPage = (props) => <TabViewPage {...props} renderScene={this._renderScene} />;
+  _renderPage = (props) =>  <TabViewPage {...props} renderScene={this._renderScene} />;
+
+  _renderTabBar = (props) =>
+    <TabBar
+      {...props}
+      indicatorStyle={{ backgroundColor: '#f50057' }}
+      style={{ backgroundColor: '#f50057' }}
+    />
+  ;
 
   render() {
     return (
       <TabView
-        navigationState={this.state}
         tabBarPosition={'bottom'}
         renderScene={this._renderScene}
         onIndexChange={index => this.setState({ index })}
-        initialLayout={{ width: 100 }}
+        navigationState={this.state}
+        renderTabBar={this._renderTabBar}
       />
     );
   }
@@ -561,7 +569,7 @@ const styles = StyleSheet.create({
     padding:10
    },
    button: {
-    backgroundColor: '#c83539',
+    backgroundColor: '#f50057',
     borderColor: 'white',
     borderWidth: 1,
     borderRadius: 4,
@@ -585,8 +593,12 @@ const styles = StyleSheet.create({
     textAlign:'center',
    },
    tab: {
-    backgroundColor: '#c83539',
+    backgroundColor: '#f50057',
    },
+   tabBar: {
+    flexDirection: 'row',
+    backgroundColor:'#999999',
+    },
    progress: {
     margin: 10,
   },
