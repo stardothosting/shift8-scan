@@ -8,11 +8,12 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button, TouchableOpacity, Dimensions, AppState, NetInfo, AsyncStorage, SectionList} from 'react-native';
+import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button, TouchableOpacity, Dimensions, AppState, NetInfo, SectionList, Switch, AsyncStorage} from 'react-native';
 import { List, ListItem, Badge, Icon, Avatar, withBadge } from 'react-native-elements';
 import { TabView, TabViewPage, TabBarTop, SceneMap } from 'react-native-tab-view';
 
 // Custom requires
+//import AsyncStorage from '@react-native-community/async-storage';
 import { NetworkInfo } from 'react-native-network-info';
 import SubnetmaskModule from 'get-subnet-mask';
 import TouchableScale from 'react-native-touchable-scale'; // https://github.com/kohver/react-native-touchable-scale
@@ -152,11 +153,12 @@ export default class App extends Component<Props> {
   }
 
   componentDidMount() {
-    AsyncStorage.getItem('portScan').then((item) => {
+
+    AsyncStorage.getItem('@portScan').then((item) => {
       if (item) {
-        //console.log('FOUND ITEM :  ' + JSON.stringify(item));
+        console.log('FOUND ITEM :  ' + JSON.parse(item));
         var parsed_item = JSON.parse(item);
-        this.setState({ 'portScan': JSON.parse(item) });
+        this.setState({ 'portScan': parsed_item });
         item.indexOf("21") > -1 ? this.setState({ 'isOnPort21ToggleSwitch' : true }) : this.setState({ 'isOnPort21ToggleSwitch' : false});
         item.indexOf("22") > -1 ? this.setState({ 'isOnPort22ToggleSwitch' : true }) : this.setState({ 'isOnPort22ToggleSwitch' : false});
         item.indexOf("25") > -1 ? this.setState({ 'isOnPort25ToggleSwitch' : true }) : this.setState({ 'isOnPort25ToggleSwitch' : false});
@@ -164,7 +166,7 @@ export default class App extends Component<Props> {
         item.indexOf("443") > -1 ? this.setState({ 'isOnPort443ToggleSwitch' : true }) : this.setState({ 'isOnPort443ToggleSwitch' : false});
         item.indexOf("3389") > -1 ? this.setState({ 'isOnPort3389ToggleSwitch' : true }) : this.setState({ 'isOnPort3389ToggleSwitch' : false});
       } else {
-        //console.log('NOT FOUND ITEM');
+        console.log('NOT FOUND ITEM : ' + JSON.stringify(scanPorts));
         this.setState({ 'portScan' : JSON.stringify(scanPorts) });
         this.setState({ 'isOnPort21ToggleSwitch' : true });
         this.setState({ 'isOnPort22ToggleSwitch' : true });
@@ -172,7 +174,7 @@ export default class App extends Component<Props> {
         this.setState({ 'isOnPort80ToggleSwitch' : true });
         this.setState({ 'isOnPort443ToggleSwitch' : true });
         this.setState({ 'isOnPort3389ToggleSwitch' : true });
-        AsyncStorage.setItem('portScan', JSON.stringify(scanPorts));
+        AsyncStorage.setItem('@portScan', JSON.stringify(scanPorts));
       }
 
     });
@@ -220,29 +222,19 @@ export default class App extends Component<Props> {
   };
 
   toggleSwitch = () => {
-    var port_toggle = new Array();
-    port_toggle["port21"] = this.state.isOnPort21ToggleSwitch;
-    port_toggle["port22"] = this.state.isOnPort22ToggleSwitch;
-    port_toggle["port25"] = this.state.isOnPort25ToggleSwitch;
-    port_toggle["port80"] = this.state.isOnPort80ToggleSwitch;
-    port_toggle["port443"] = this.state.isOnPort443ToggleSwitch;
-    port_toggle["port3389"] = this.state.isOnPort3389ToggleSwitch;
-
-    var toggle_ports = new Promise(function(resolve, reject) {
-      var port_array = new Array();
-      if (port_toggle["port21"] == true) port_array.push('21');
-      if (port_toggle["port22"] == true) port_array.push('22');
-      if (port_toggle["port25"] == true) port_array.push('25');
-      if (port_toggle["port80"] == true) port_array.push('80');
-      if (port_toggle["port443"] == true) port_array.push('443');
-      if (port_toggle["port3389"] == true) port_array.push('3389');
-      resolve(port_array);
-    });
-    toggle_ports.then((response) => {
-      this.setState({ portScan: JSON.stringify(response) });
-      AsyncStorage.setItem('portScan', JSON.stringify(response));
-    });
+    var port_array = new Array();
+    if (this.state.isOnPort21ToggleSwitch) { port_array.push('21'); console.log('port21'); }
+    if (this.state.isOnPort22ToggleSwitch) { port_array.push('22'); console.log('port22'); }
+    if (this.state.isOnPort25ToggleSwitch) { port_array.push('25'); console.log('port25');}
+    if (this.state.isOnPort80ToggleSwitch) { port_array.push('80'); console.log('port80');}
+    if (this.state.isOnPort443ToggleSwitch) { port_array.push('443'); console.log('port443');}
+    if (this.state.isOnPort3389ToggleSwitch) { port_array.push('3389'); console.log('port3389');}
+    
+    console.log('Port array : ' + JSON.stringify(port_array));
+    this.setState({ portScan: port_array });
+    AsyncStorage.setItem('@portScan', JSON.stringify(port_array));
   }
+
 
   triggerScan = () => {
     // Gather Network Info
@@ -376,7 +368,7 @@ keyExtractor = (item, index) => index.toString()
         return (
           <View style={styles.container}>
           <Text>Choose which ports to scan</Text>
-            <ToggleSwitch
+           <ToggleSwitch
               isOn={this.state.isOnPort21ToggleSwitch}
               onColor='green'
               offColor='red'
@@ -384,8 +376,10 @@ keyExtractor = (item, index) => index.toString()
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
               onToggle={isOnPort21ToggleSwitch => {
-                this.setState({ isOnPort21ToggleSwitch });
-                this.toggleSwitch();
+                  this.setState({ 
+                    isOnPort21ToggleSwitch }, () => {
+                      this.toggleSwitch();
+                    }); 
               }}
             />
 
@@ -397,8 +391,10 @@ keyExtractor = (item, index) => index.toString()
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
               onToggle={isOnPort22ToggleSwitch => {
-                this.setState({ isOnPort22ToggleSwitch });
-                this.toggleSwitch();
+                 this.setState({ 
+                    isOnPort22ToggleSwitch }, () => {
+                      this.toggleSwitch();
+                    }); 
               }}
             />
             <ToggleSwitch
@@ -409,8 +405,10 @@ keyExtractor = (item, index) => index.toString()
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
               onToggle={isOnPort25ToggleSwitch => {
-                this.setState({ isOnPort25ToggleSwitch });
-                this.toggleSwitch();
+                 this.setState({ 
+                    isOnPort25ToggleSwitch }, () => {
+                      this.toggleSwitch();
+                    }); 
               }}
             />
             <ToggleSwitch
@@ -421,8 +419,10 @@ keyExtractor = (item, index) => index.toString()
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
               onToggle={isOnPort80ToggleSwitch => {
-                this.setState({ isOnPort80ToggleSwitch });
-                this.toggleSwitch();
+                 this.setState({ 
+                    isOnPort80ToggleSwitch }, () => {
+                      this.toggleSwitch();
+                    }); 
               }}
             />
             <ToggleSwitch
@@ -433,8 +433,10 @@ keyExtractor = (item, index) => index.toString()
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
               onToggle={isOnPort443ToggleSwitch => {
-                this.setState({ isOnPort443ToggleSwitch });
-                this.toggleSwitch();
+                 this.setState({ 
+                    isOnPort443ToggleSwitch }, () => {
+                      this.toggleSwitch();
+                    }); 
               }}
             />
             <ToggleSwitch
@@ -446,8 +448,10 @@ keyExtractor = (item, index) => index.toString()
               size='small'
               value='3389'
               onToggle={isOnPort3389ToggleSwitch => {
-                this.setState({ isOnPort3389ToggleSwitch });
-                this.toggleSwitch();
+                 this.setState({ 
+                    isOnPort3389ToggleSwitch }, () => {
+                      this.toggleSwitch();
+                    }); 
               }}
             />
           </View>
