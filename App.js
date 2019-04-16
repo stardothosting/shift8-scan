@@ -8,7 +8,7 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button, TouchableOpacity, Dimensions, AppState, NetInfo, SectionList, Switch, AsyncStorage} from 'react-native';
+import {Platform, StyleSheet, Text, TextInput, View, AppRegistry, ScrollView, FlatList, Button, TouchableOpacity, Dimensions, AppState, NetInfo, SectionList, Switch, AsyncStorage, Linking} from 'react-native';
 import { List, ListItem, Badge, Icon, Avatar, withBadge } from 'react-native-elements';
 import { TabView, TabViewPage, TabBarTop, SceneMap } from 'react-native-tab-view';
 
@@ -137,6 +137,7 @@ export default class App extends Component<Props> {
       listContent: [],
       connection_Status: '',
       showScan: false,
+      cancelScan: false,
       index: 0,
       routes: [
         { key: 'main', title: 'Scan' },
@@ -157,7 +158,7 @@ export default class App extends Component<Props> {
 
     AsyncStorage.getItem('@portScan').then((item) => {
       if (item) {
-        console.log('FOUND ITEM :  ' + JSON.parse(item));
+        //console.log('FOUND ITEM :  ' + JSON.parse(item));
         var parsed_item = JSON.parse(item);
         this.setState({ 'portScan': parsed_item });
         item.indexOf("21") > -1 ? this.setState({ 'isOnPort21ToggleSwitch' : true }) : this.setState({ 'isOnPort21ToggleSwitch' : false});
@@ -167,7 +168,7 @@ export default class App extends Component<Props> {
         item.indexOf("443") > -1 ? this.setState({ 'isOnPort443ToggleSwitch' : true }) : this.setState({ 'isOnPort443ToggleSwitch' : false});
         item.indexOf("3389") > -1 ? this.setState({ 'isOnPort3389ToggleSwitch' : true }) : this.setState({ 'isOnPort3389ToggleSwitch' : false});
       } else {
-        console.log('NOT FOUND ITEM : ' + JSON.stringify(scanPorts));
+        //console.log('NOT FOUND ITEM : ' + JSON.stringify(scanPorts));
         this.setState({ 'portScan' : JSON.stringify(scanPorts) });
         this.setState({ 'isOnPort21ToggleSwitch' : true });
         this.setState({ 'isOnPort22ToggleSwitch' : true });
@@ -222,16 +223,21 @@ export default class App extends Component<Props> {
     }
   };
 
+  resetEverything = () => {
+    this.setState({progress: 0 });
+    this.setState({listContent: new Array() });
+  }
+
   toggleSwitch = () => {
     var port_array = new Array();
-    if (this.state.isOnPort21ToggleSwitch) { port_array.push('21'); console.log('port21'); }
-    if (this.state.isOnPort22ToggleSwitch) { port_array.push('22'); console.log('port22'); }
-    if (this.state.isOnPort25ToggleSwitch) { port_array.push('25'); console.log('port25');}
-    if (this.state.isOnPort80ToggleSwitch) { port_array.push('80'); console.log('port80');}
-    if (this.state.isOnPort443ToggleSwitch) { port_array.push('443'); console.log('port443');}
-    if (this.state.isOnPort3389ToggleSwitch) { port_array.push('3389'); console.log('port3389');}
+    if (this.state.isOnPort21ToggleSwitch) { port_array.push('21'); }
+    if (this.state.isOnPort22ToggleSwitch) { port_array.push('22'); }
+    if (this.state.isOnPort25ToggleSwitch) { port_array.push('25'); }
+    if (this.state.isOnPort80ToggleSwitch) { port_array.push('80'); }
+    if (this.state.isOnPort443ToggleSwitch) { port_array.push('443'); }
+    if (this.state.isOnPort3389ToggleSwitch) { port_array.push('3389'); }
     
-    console.log('Port array : ' + JSON.stringify(port_array));
+    //console.log('Port array : ' + JSON.stringify(port_array));
     this.setState({ portScan: port_array  });
     AsyncStorage.setItem('@portScan', JSON.stringify(port_array));
   }
@@ -278,6 +284,7 @@ export default class App extends Component<Props> {
       // Nested for-loops to iterate across ips and ports
       for (let i = 0, p = Promise.resolve(); i < response["ip_range"].length; i++) {
         var total_ips = response["ip_range"].length;
+        // Exit the loop and reset if cancelled
           p = p.then(_ => new Promise(resolve_1 =>
               setTimeout(function () {
                 // nested start
@@ -317,7 +324,7 @@ export default class App extends Component<Props> {
                 this.setState({ listContent: [...this.state.listContent, scanResult]});
                 this.setState({ listContent: scanResult});
                 //console.log('SCAN RESULT : ' + JSON.stringify(scanResult));
-                console.log('IP Address : ' + i + ' out of total : ' + total_ips);
+                //console.log('IP Address : ' + i + ' out of total : ' + total_ips);
                 var current_progress = i / total_ips;
                 this.setState({ progress: current_progress });
             }
@@ -333,6 +340,7 @@ export default class App extends Component<Props> {
   _renderScan = () => {
     if (this.state.showScan) {
       return (
+        <View style={styles.scanContainer}>
           <TouchableOpacity 
             onPress={this.triggerScan} 
             accessibilityRole="link"
@@ -340,7 +348,14 @@ export default class App extends Component<Props> {
           >
             <Text style={styles.button} accessibilityRole="link">Scan Your Network</Text>
           </TouchableOpacity>
-
+          <TouchableOpacity 
+            onPress={this.resetEverything} 
+            accessibilityRole="link"
+            {...this.props}
+          >
+            <Text style={styles.buttonReset} accessibilityRole="link">Reset</Text>
+          </TouchableOpacity>
+          </View>
       );
     } else {
       return (
@@ -468,7 +483,12 @@ keyExtractor = (item, index) => index.toString()
       case 'about':
         return (
           <View style={styles.container}>
-          <Text>About Placeholder</Text>
+          <Text style={{padding:10}}>Shift8 Scan is a proof of concept TCP port scanner written in React Native.</Text>
+          <Text style={{padding:10}}>Using an array of a definable set of TCP ports, you can scan your local network to see which devices are avaialble.</Text>
+          <Text style={{color: 'blue', padding:10}}
+            onPress={() => Linking.openURL('https://www.shift8web.ca/')}>
+            Visit Shift8 to learn more
+            </Text>
           </View>
         );
     }
@@ -514,6 +534,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
+  scanContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+  },
   main: {
     fontSize: 20,
     textAlign: 'center',
@@ -541,6 +566,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 4,
     color: 'white',
+    fontSize: 14,
+    fontWeight: 'normal',
+    overflow: 'hidden',
+    padding: 6,
+    textAlign:'center',
+   },
+   buttonReset: {
+    backgroundColor: '#55E662',
+    borderColor: 'white',
+    borderWidth: 1,
+    borderRadius: 4,
+    color: 'black',
     fontSize: 14,
     fontWeight: 'normal',
     overflow: 'hidden',
