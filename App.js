@@ -155,7 +155,7 @@ export default class App extends Component<Props> {
   }
 
   componentDidMount() {
-
+    // Set default settings if no settings exist, or pull existing settings and apply them to the state
     AsyncStorage.getItem('@portScan').then((item) => {
       if (item) {
         //console.log('FOUND ITEM :  ' + JSON.parse(item));
@@ -181,6 +181,7 @@ export default class App extends Component<Props> {
 
     });
 
+    // Detect the network settings; If on a WiFi/LAN then set state for the scan being enabled
     NetInfo.addEventListener(
       'connectionChange',
       this._handleConnectivityChange
@@ -208,6 +209,7 @@ export default class App extends Component<Props> {
     );
   }
 
+  // Make sure to change the states if you suddently disconnect from WiFi
   _handleConnectivityChange = (connectionInfo) => {
     if(connectionInfo.type === 'wifi') {
       this.setState({
@@ -223,12 +225,14 @@ export default class App extends Component<Props> {
     }
   };
 
+  // Function to reset progress and scan result states if the reset button is tapped
   resetEverything = () => {
     this.setState({progress: 0 });
     this.setState({listContent: new Array() });
     scanResult = new Array();
   }
 
+  // Function to handle changing the ports to scan on the settings page
   toggleSwitch = () => {
     var port_array = new Array();
     if (this.state.isOnPort21ToggleSwitch) { port_array.push('21'); }
@@ -243,7 +247,7 @@ export default class App extends Component<Props> {
     AsyncStorage.setItem('@portScan', JSON.stringify(port_array));
   }
 
-
+  // Function to start a scan of your LAN based on detected IP, subnet, gateway and other info
   triggerScan = () => {
     // Gather Network Info
     var network_promise = new Promise(function(resolve, reject) {
@@ -278,8 +282,6 @@ export default class App extends Component<Props> {
 
     // Get variables and use them
     network_promise.then((response) => {
-      // Clear scan result array
-      //this.setState({ listContent: [] });
       var portScan = this.state.portScan;
 
       // Nested for-loops to iterate across ips and ports
@@ -320,6 +322,7 @@ export default class App extends Component<Props> {
                 resolve_1(scanResult);
               }, 1)
           ));
+          // With results , set states to display and update progress bar
           p.then(response => {
             if (scanResult && scanResult.length > 0) {
                 this.setState({ listContent: [...this.state.listContent, scanResult]});
@@ -338,6 +341,7 @@ export default class App extends Component<Props> {
     })
   }
 
+  // Render the scan area
   _renderScan = () => {
     if (this.state.showScan) {
       return (
