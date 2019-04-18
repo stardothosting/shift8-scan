@@ -169,7 +169,7 @@ export default class App extends Component<Props> {
         item.indexOf("3389") > -1 ? this.setState({ 'isOnPort3389ToggleSwitch' : true }) : this.setState({ 'isOnPort3389ToggleSwitch' : false});
       } else {
         //console.log('NOT FOUND ITEM : ' + JSON.stringify(scanPorts));
-        this.setState({ 'portScan' : JSON.stringify(scanPorts) });
+        this.setState({ 'portScan' : scanPorts });
         this.setState({ 'isOnPort21ToggleSwitch' : true });
         this.setState({ 'isOnPort22ToggleSwitch' : true });
         this.setState({ 'isOnPort25ToggleSwitch' : true });
@@ -226,6 +226,7 @@ export default class App extends Component<Props> {
   resetEverything = () => {
     this.setState({progress: 0 });
     this.setState({listContent: new Array() });
+    scanResult = new Array();
   }
 
   toggleSwitch = () => {
@@ -394,8 +395,8 @@ keyExtractor = (item, index) => index.toString()
           <Text>Choose which ports to scan</Text>
            <ToggleSwitch
               isOn={this.state.isOnPort21ToggleSwitch}
-              onColor='green'
-              offColor='red'
+              onColor='#55E662'
+              offColor='#dddddd'
               label='TCP Port 21'
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
@@ -409,8 +410,8 @@ keyExtractor = (item, index) => index.toString()
 
             <ToggleSwitch
               isOn={this.state.isOnPort22ToggleSwitch}
-              onColor='green'
-              offColor='red'
+              onColor='#55E662'
+              offColor='#dddddd'
               label='TCP Port 22'
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
@@ -423,8 +424,8 @@ keyExtractor = (item, index) => index.toString()
             />
             <ToggleSwitch
               isOn={this.state.isOnPort25ToggleSwitch}
-              onColor='green'
-              offColor='red'
+              onColor='#55E662'
+              offColor='#dddddd'
               label='TCP Port 25'
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
@@ -437,8 +438,8 @@ keyExtractor = (item, index) => index.toString()
             />
             <ToggleSwitch
               isOn={this.state.isOnPort80ToggleSwitch}
-              onColor='green'
-              offColor='red'
+              onColor='#55E662'
+              offColor='#dddddd'
               label='TCP Port 80'
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
@@ -451,8 +452,8 @@ keyExtractor = (item, index) => index.toString()
             />
             <ToggleSwitch
               isOn={this.state.isOnPort443ToggleSwitch}
-              onColor='green'
-              offColor='red'
+              onColor='#55E662'
+              offColor='#dddddd'
               label='TCP Port 443'
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
@@ -465,8 +466,8 @@ keyExtractor = (item, index) => index.toString()
             />
             <ToggleSwitch
               isOn={this.state.isOnPort3389ToggleSwitch}
-              onColor='green'
-              offColor='red'
+              onColor='#55E662'
+              offColor='#dddddd'
               label='TCP Port 3389'
               labelStyle={{color: 'black', fontWeight: '900', margin:10}}
               size='small'
