@@ -4,6 +4,8 @@
 !**/*.xcworkspacedata
 !**/*.xcsettings
 !**/*.xcscheme
+!**/*.keystore
+*.keystore
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -22,6 +24,7 @@ DerivedData
 project.xcworkspace
 
 # Gradle
+gradle.properties
 /build/
 /RNTester/android/app/build/
 /RNTester/android/app/gradle/
@@ -45,6 +48,7 @@ buck-out
 local.properties
 *.iml
 /android/
+/android/gradle.properties
 
 # Node
 node_modules
