@@ -19,7 +19,8 @@ import SubnetmaskModule from 'get-subnet-mask';
 import TouchableScale from 'react-native-touchable-scale'; // https://github.com/kohver/react-native-touchable-scale
 import LinearGradient from 'react-native-linear-gradient'; // Only if no expo
 import ToggleSwitch from 'toggle-switch-react-native';
-var debounce = require('lodash.debounce');
+import Animated from 'react-native-reanimated';
+//var debounce = require('lodash.debounce');
 var sip = require ('shift8-ip-func');
 var net = require('react-native-tcp');
 var async = require("async");
@@ -364,7 +365,7 @@ export default class App extends Component<Props> {
       );
     } else {
       return (
-        <Text>You are not connected to a Wifi network and as a result cannot initiate any scans</Text>
+        <Text style={styles.noNetwork}>You are not connected to a Wifi network and as a result cannot initiate any scans.</Text>
       );
     }
   }
@@ -375,6 +376,7 @@ keyExtractor = (item, index) => index.toString()
   _renderScene = ({ route }) => {
     switch (route.key) {
       case 'main':
+      if (this.state.showScan) {
         return (
             <View style={styles.container}>
             <View style={styles.main}>
@@ -393,6 +395,21 @@ keyExtractor = (item, index) => index.toString()
             />
           </View>
         );
+      } else {
+        return (
+          <View style={styles.container}>
+          <View style={styles.main}>
+          {this._renderScan()} 
+          </View>
+          <FlatList 
+             keyExtractor={(item, index) => index.toString() }
+             data={this.state.listContent}
+             extraData={this.state.listContent}
+             renderItem={this.renderRow}
+          />
+        </View>
+        );
+      }
       case 'settings':
         return (
           <View style={styles.container}>
@@ -555,6 +572,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+  },
+  noNetwork: {
+    padding:25,
+    alignItems: 'center',
+    color: '#000000',
   },
   main: {
     fontSize: 20,

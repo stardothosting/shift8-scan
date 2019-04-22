@@ -3,11 +3,15 @@ package com.shift8scan;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
-import com.swmansion.reanimated.ReanimatedPackage;
-import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
-import com.BV.LinearGradient.LinearGradientPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
+import com.peel.react.TcpSocketsModule;
+import com.stonem.sockets.SocketsPackage;
+import com.swmansion.reanimated.ReanimatedPackage;
+import com.pusherman.networkinfo.RNNetworkInfoPackage;
+import com.BV.LinearGradient.LinearGradientPackage;
+import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
+import com.example.habibi.mynativemodule.MyNativeModulePackage;
+import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -28,11 +32,15 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new AsyncStoragePackage(),
+            new VectorIconsPackage(),
+            new TcpSocketsModule(),
+            new SocketsPackage(),
             new ReanimatedPackage(),
-            new RNGestureHandlerPackage(),
+            new RNNetworkInfoPackage(),
             new LinearGradientPackage(),
-            new VectorIconsPackage()
+            new RNGestureHandlerPackage(),
+            new MyNativeModulePackage(),
+            new AsyncStoragePackage()
       );
     }
 
