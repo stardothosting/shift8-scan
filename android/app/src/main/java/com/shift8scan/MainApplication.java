@@ -3,9 +3,9 @@ package com.shift8scan;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.stonem.sockets.SocketsPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.peel.react.TcpSocketsModule;
-import com.stonem.sockets.SocketsPackage;
 import com.swmansion.reanimated.ReanimatedPackage;
 import com.pusherman.networkinfo.RNNetworkInfoPackage;
 import com.BV.LinearGradient.LinearGradientPackage;
@@ -32,9 +32,9 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new SocketsPackage(),
             new VectorIconsPackage(),
             new TcpSocketsModule(),
-            new SocketsPackage(),
             new ReanimatedPackage(),
             new RNNetworkInfoPackage(),
             new LinearGradientPackage(),
