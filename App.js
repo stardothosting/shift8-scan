@@ -254,8 +254,8 @@ export default class App extends Component<Props> {
     var network_promise = new Promise(function(resolve, reject) {
       NetworkInfo.getIPAddress(ip => { 
         local_ip = ip; 
-        NetworkInfo.getBroadcast(address => { 
-          local_broadcast = address; 
+        //NetworkInfo.getBroadcast(address => { 
+          //local_broadcast = address; 
             SubnetmaskModule.getSubnet((sb) => {
               local_netmask = sb;
               subconv = ipaddr.IPv4.parse(local_netmask).prefixLengthFromSubnetMask();
@@ -267,7 +267,7 @@ export default class App extends Component<Props> {
               ipRange = ipRange.slice(1); // Remove the first ip in the array
               resolve({
                 local_ip: local_ip, 
-                local_broadcast: local_broadcast, 
+                //local_broadcast: local_broadcast, 
                 local_netmask: local_netmask, 
                 subnet_conv: subconv, 
                 first_host: firstHost, 
@@ -277,14 +277,14 @@ export default class App extends Component<Props> {
                 ip_range: ipRange
               });
             });
-        });
+        //});
       });
     });
 
     // Get variables and use them
     network_promise.then((response) => {
       var portScan = this.state.portScan;
-
+      console.log('HERE I AM');
       // Nested for-loops to iterate across ips and ports
       for (let i = 0, p = Promise.resolve(); i < response["ip_range"].length; i++) {
         var total_ips = response["ip_range"].length;
@@ -328,8 +328,8 @@ export default class App extends Component<Props> {
             if (scanResult && scanResult.length > 0) {
                 this.setState({ listContent: [...this.state.listContent, scanResult]});
                 this.setState({ listContent: scanResult});
-                //console.log('SCAN RESULT : ' + JSON.stringify(scanResult));
-                //console.log('IP Address : ' + i + ' out of total : ' + total_ips);
+                console.log('SCAN RESULT : ' + JSON.stringify(scanResult));
+                console.log('IP Address : ' + i + ' out of total : ' + total_ips);
                 var current_progress = i / total_ips;
                 this.setState({ progress: current_progress });
             }
